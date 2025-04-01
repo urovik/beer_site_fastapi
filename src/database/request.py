@@ -18,7 +18,7 @@ async def add_users(name,password,email):
         new_user = User(
             name = name, 
             email = email,
-            password = hash_password(password=password)
+            password = await hash_password(password=password)
            
         )
         session.add(new_user)

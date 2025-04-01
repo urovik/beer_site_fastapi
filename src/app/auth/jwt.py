@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Form, HTTPException,status
+from jwt import DecodeError
 from src.app.auth.pydantic_model import TokenInfo
 import src.app.auth.utils as auth_utils
 
@@ -35,11 +36,18 @@ async def validate_auth_user(
 async def get_current_token_payload_user(
     credentials: HTTPAuthorizationCredentials = Depends(http_bearer)
 ) -> UserSchema:
-    token = credentials.credentials
-    payload = auth_utils.decode_jwt(
+    try:
+        token = credentials.credentials
+        payload = auth_utils.decode_jwt(
         token=token
     )
-    return payload
+        return payload
+    except DecodeError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="token invalid"
+        )
+
 
 async def get_current_auth_user(
     payload: dict = Depends(get_current_token_payload_user)
