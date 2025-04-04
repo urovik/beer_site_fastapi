@@ -1,19 +1,25 @@
 from datetime import datetime, timedelta
+
+
 import jwt
 import bcrypt
 
 from src.config.settings import Settings
 
+
+
+
+
 def encode_jwt(
         payload: dict,
         private_key: str = Settings.private_key,
         algorithm: str = Settings.algorithm,
-        expire_minutes: int = 1
+        expire_minutes: int = 20
 ):
     to_encode = payload.copy()
     now = datetime.utcnow()
     expire = now + timedelta(minutes=expire_minutes)
-    to_encode['exp'] = expire
+    to_encode.update({'exp' : expire})
     encoded = jwt.encode(to_encode,private_key,algorithm=algorithm)
     return encoded
 
@@ -27,7 +33,7 @@ def decode_jwt(
     return decoded
 
 
-async def hash_password(password: str) -> bytes:
+def hash_password(password: str) -> bytes:
     salt = bcrypt.gensalt()
     pwd_pass: bytes = password.encode()
     return bcrypt.hashpw(pwd_pass,salt)

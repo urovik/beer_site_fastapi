@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Form, HTTPException,status
+from fastapi import APIRouter, Cookie, Depends, Form, HTTPException, Response,status
 from jwt import DecodeError
 from src.app.auth.pydantic_model import TokenInfo
 import src.app.auth.utils as auth_utils
@@ -10,7 +10,9 @@ import src.database.request as rg
 from src.config.pydantics_model import UserSchema
 
 
-http_bearer = HTTPBearer()
+#http_bearer = HTTPBearer()
+
+#oauth2_scheme = OAuth2PasswordBearerWithCookie(tokenUrl="/api/auth/login")
 router = APIRouter(prefix = "/api/jwt",tags = ["JWT"])
 
 
@@ -22,7 +24,7 @@ async def validate_auth_user(
             status_code = status.HTTP_401_UNAUTHORIZED,
             detail="invalid password or name")
     
-    if not (user := await rg.get_user(name=name)):
+    if not (user:= await rg.get_user_by_name(name=name)):
         raise unauthed_exp
     
     if not auth_utils.validate_password(
@@ -34,10 +36,15 @@ async def validate_auth_user(
 
 
 async def get_current_token_payload_user(
-    credentials: HTTPAuthorizationCredentials = Depends(http_bearer)
+    access_token: str = Cookie(None)
 ) -> UserSchema:
     try:
-        token = credentials.credentials
+        token = access_token
+        if access_token is None:
+            raise HTTPException(
+                status_code= status.HTTP_401_UNAUTHORIZED,
+                detail="token missing"
+            )
         payload = auth_utils.decode_jwt(
         token=token
     )
@@ -52,29 +59,37 @@ async def get_current_token_payload_user(
 async def get_current_auth_user(
     payload: dict = Depends(get_current_token_payload_user)
 ) -> UserSchema:
-    name: str = payload.get("sub")
-    if not (user := await rg.get_user(name=name)):
+    id: str = payload.get("sub")
+    if not (user := await rg.get_user_by_id(id=id)):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="not found"
         )
     return user
 
-@router.post('/login')
-async def login(user: UserSchema = Depends(validate_auth_user)) -> TokenInfo:
+@router.post('/token')
+async def login(response: Response,user: UserSchema = Depends(validate_auth_user)) -> TokenInfo:
     jwt_payload = {
-        "sub": user.name,
+        "sub": str(user.id),
+        "name": user.name,
         "email": user.email
 
     }
     token = auth_utils.encode_jwt(jwt_payload)
+     #Устанавливаем токен в куку
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,  # Доступно только для серверных запросов
+        samesite="Strict"  # Защита от CSRF
+    )
     return TokenInfo(
         access_token=token,
         token_type="Bearer"
     )
 
 @router.get("/profile")
-async def auth_usr_profile(
+async def auth_user_profile(
     user: UserSchema = Depends(get_current_auth_user)
 ):
     return {

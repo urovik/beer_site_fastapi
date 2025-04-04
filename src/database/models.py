@@ -1,6 +1,9 @@
 from typing import Optional
+import uuid
 from sqlalchemy.ext.asyncio import create_async_engine,async_sessionmaker
 from sqlalchemy.orm import mapped_column,Mapped
+
+from sqlalchemy.dialects.postgresql import UUID
 
 from src.database.Base import Base
 from src.config.settings import Settings
@@ -16,7 +19,8 @@ async_session = async_sessionmaker(bind=engine)
 
 class User(Base):
     __tablename__ = "users"
-    id : Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID, primary_key=True, index=True, default=uuid.uuid4)
     name: Mapped[str]
     email: Mapped[Optional[str]]
     password: Mapped[bytes]

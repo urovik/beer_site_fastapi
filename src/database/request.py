@@ -1,3 +1,4 @@
+import uuid
 from sqlalchemy import select,insert,update,delete
 from src.app.auth.utils import hash_password
 from src.database.models import User
@@ -7,9 +8,15 @@ from typing import List
 
 
 
-async def get_user(name: str) -> UserSchema:
+async def get_user_by_name(name: str) -> UserSchema:
     async with async_session() as session:
         query = select(User).where(User.name == name)
+        res = await session.execute(query)
+        return res.scalar()
+
+async def get_user_by_id(id: uuid.UUID) -> UserSchema:
+    async with async_session() as session:
+        query = select(User).where(User.id == id)
         res = await session.execute(query)
         return res.scalar()
 
@@ -18,19 +25,18 @@ async def add_users(name,password,email):
         new_user = User(
             name = name, 
             email = email,
-            password = await hash_password(password=password)
-           
+            password = hash_password(password)
         )
         session.add(new_user)
         await session.commit()
     
-async def delete_users(id: int):
+async def delete_users(id: uuid.UUID):
     async with async_session() as session:
         query = delete(User).where(User.id == id)
         await session.execute(query)
         await session.commit()
 
-async def update_users(id: int, name: str, email: str ):
+async def update_users(id: uuid.UUID, name: str, email: str ):
     async with async_session() as session:
         query = update(User).where(User.id == id).values(name = name,email = email )
         await session.execute(query)
