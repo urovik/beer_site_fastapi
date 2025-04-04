@@ -1,6 +1,7 @@
 import uuid
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends,Request
 
+from app.auth.jwt import get_current_auth_user
 from src.config.pydantics_model import UserCreate, UserSchema
 
 import src.database.request as rq
@@ -12,8 +13,8 @@ async def get_all_user():
     return await rq.get_all_users()
 
 @router.get("/{user_id}")
-async def get_user(user_id: uuid.UUID):
-    res = await rq.get_user_by_id(id = user_id)
+async def get_user(user_id: UserSchema = Depends(get_current_auth_user)):
+    res = await rq.get_user_by_id(id = user_id.id)
     return res
 
 @router.post("")
