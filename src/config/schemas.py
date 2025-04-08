@@ -2,17 +2,23 @@ import uuid
 from pydantic import BaseModel,ConfigDict, EmailStr
 
 
-class UserCreate(BaseModel):
+class UserBase(BaseModel):
     name: str
-    password: str
     email: EmailStr
 
     model_config = ConfigDict(from_attributes=True)
 
+class UserCreateSchema(UserBase):
+    password: str
 
-class UserSchema(BaseModel):
+
+
+class UserSchema(UserBase):
     id: uuid.UUID
-    
+
+
+class UserUpdateSchema(UserBase):
+    pass
 
 
 

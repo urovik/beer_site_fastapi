@@ -5,7 +5,7 @@ from sqlalchemy.orm import mapped_column,Mapped
 
 from sqlalchemy.dialects.postgresql import UUID
 
-from src.database.Base import Base
+from .Base import Base
 from src.config.settings import Settings
 
 

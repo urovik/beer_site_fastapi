@@ -3,9 +3,9 @@ from fastapi import FastAPI
 import uvicorn
 
 
-from app.user import router as router_users
-from app.api_rq import router as api_router
-from app.auth.jwt import router as jwt_router    
+from users.router import router as router_users
+from src.app.http.api_rq import router as api_router
+from auth.router import router as jwt_router    
 from src.database.models import db_init
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -20,7 +20,7 @@ app = FastAPI(title = "api_for_beer",lifespan = lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=['http://localhost:5173','http://127.0.0.1:5173'],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -28,7 +28,7 @@ app.add_middleware(
 
 app.include_router(router = router_users)
 app.include_router(router = api_router)
-app.include_router(router= jwt_router)
+app.include_router(router = jwt_router)
 
 
 

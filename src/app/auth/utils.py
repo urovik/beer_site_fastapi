@@ -14,11 +14,11 @@ def encode_jwt(
         payload: dict,
         private_key: str = Settings.private_key,
         algorithm: str = Settings.algorithm,
-        expire_minutes: int = 20
+        expire_minutes: int = Settings.expire_minutes
 ):
     to_encode = payload.copy()
     now = datetime.utcnow()
-    expire = now + timedelta(minutes=expire_minutes)
+    expire = now + timedelta(minutes=int(expire_minutes))
     to_encode.update({'exp' : expire})
     encoded = jwt.encode(to_encode,private_key,algorithm=algorithm)
     return encoded

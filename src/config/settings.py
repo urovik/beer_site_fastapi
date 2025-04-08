@@ -13,4 +13,5 @@ class Settings():
     private_key = os.getenv('PRIVATE_KEY').strip()
     public_key = os.getenv('PUBLIC_KEY').strip()
     algorithm = os.getenv('ALGORITHM')
+    expire_minutes = os.getenv('EXPIRE_MINUTES')
 

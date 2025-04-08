@@ -1,19 +1,10 @@
-from fastapi import APIRouter, Cookie, Depends, Form, HTTPException, Response,status
+from fastapi import Cookie, Depends, Form, HTTPException,status
 from jwt import DecodeError
-from src.app.auth.pydantic_model import TokenInfo
-import src.app.auth.utils as auth_utils
-
-from fastapi.security import HTTPBearer,HTTPAuthorizationCredentials
 
 import src.database.request as rg
 
-from src.config.pydantics_model import UserSchema
-
-
-#http_bearer = HTTPBearer()
-
-#oauth2_scheme = OAuth2PasswordBearerWithCookie(tokenUrl="/api/auth/login")
-router = APIRouter(prefix = "/api/jwt",tags = ["JWT"])
+import utils as auth_utils
+from src.config.schemas import UserSchema
 
 
 async def validate_auth_user(
@@ -66,33 +57,3 @@ async def get_current_auth_user(
             detail="not found"
         )
     return user
-
-@router.post('/token')
-async def login(response: Response,user: UserSchema = Depends(validate_auth_user)) -> TokenInfo:
-    jwt_payload = {
-        "sub": str(user.id),
-        "name": user.name,
-        "email": user.email
-
-    }
-    token = auth_utils.encode_jwt(jwt_payload)
-     #Устанавливаем токен в куку
-    response.set_cookie(
-        key="access_token",
-        value=token,
-        httponly=True,  # Доступно только для серверных запросов
-        samesite="Strict"  # Защита от CSRF
-    )
-    return TokenInfo(
-        access_token=token,
-        token_type="Bearer"
-    )
-
-@router.get("/profile")
-async def auth_user_profile(
-    user: UserSchema = Depends(get_current_auth_user)
-):
-    return {
-        "name":user.name,
-        "email":user.email
-    }

@@ -1,8 +1,8 @@
 import uuid
-from fastapi import APIRouter, Depends,Request
+from fastapi import APIRouter, Depends
 
-from app.auth.jwt import get_current_auth_user
-from src.config.pydantics_model import UserCreate, UserSchema
+from auth.router import get_current_auth_user
+from src.config.schemas import UserCreateSchema, UserSchema,UserUpdateSchema
 
 import src.database.request as rq
 
@@ -18,7 +18,7 @@ async def get_user(user_id: UserSchema = Depends(get_current_auth_user)):
     return res
 
 @router.post("")
-async def add_user(user: UserCreate):
+async def add_user(user: UserCreateSchema):
     existing_user = await rq.get_user_by_name(user.name)
     if existing_user:
         return {"message":"пользователь уже существует"}
@@ -31,6 +31,6 @@ async def delete_user(user_id: uuid.UUID):
     return {"message":"юзер удален"}
 
 @router.put("/{user_id}")
-async def update_user(user_id: uuid.UUID, user: UserCreate):
+async def update_user(user_id: uuid.UUID, user: UserUpdateSchema):
     await rq.update_users(id = user_id, name = user.name,  email = user.email )
     return {"message" : "Данные пользователя обновлены"}
